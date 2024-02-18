@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datalens-control-api
+  labels:
+    app: datalens-control-api
+spec:
+  replicas: {{ .Values.num_pods.dl_control_api }}
+  selector:
+    matchLabels:
+      app: datalens-control-api
+  template:
+    metadata:
+      labels:
+        app: datalens-control-api
+    spec:
+      containers:
+        - name: datalens-control-api
+          image: {{ .Values.docker_images.dl_control_api }}
+          ports:
+            - containerPort: 80
+          env:
+            {{- include "crypto_keys" . | indent 12 }}
+            - name: BI_API_UWSGI_WORKERS_COUNT
+              value: {{ .Values.dl_control_api_settings.uwsgi_worker_num | quote }}
+            - name: RQE_FORCE_OFF
+              value: "1"
+            - name: US_HOST
+              value: "http://canada:8888"
+            - name: US_MASTER_TOKEN
+              value: "fake-us-master-token"  # TODO: read from k8s secrets
+            - name: CONFIG_PATH
+              value: "/etc/backend-configs/api.yaml"
+          readinessProbe:
+            httpGet:
+              port: 8080
+              scheme: HTTP
+              path: "/ping"
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/backend-configs"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: config-backend
+            items:
+              - key: config
+                path: "api.yaml"

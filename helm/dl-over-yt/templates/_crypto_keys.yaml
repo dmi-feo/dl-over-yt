@@ -1,0 +1,8 @@
+{{- define "crypto_keys" }}
+- name: DL_CRY_ACTUAL_KEY_ID
+  value: "key_1"  # TODO: move to values
+- name: DL_CRY_KEY_VAL_ID_key_1
+  value: "h1ZpilcYLYRdWp7Nk8X1M1kBPiUi8rdjz9oBfHyUKIk="  # TODO: read from k8s secrets
+- name: RQE_SECRET_KEY
+  value: "topsecret"  # TODO: read from k8s secrets
+{{ end }}

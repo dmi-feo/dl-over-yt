@@ -1,0 +1,15 @@
+{{- define "service_template" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .service_name }}
+spec:
+  selector:
+    app: {{ .app_selector }}
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv6
+    - IPv4
+  ports:
+    - port: {{ .port }}
+{{ end }}

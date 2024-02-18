@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datalens-data-api
+  labels:
+    app: datalens-data-api
+spec:
+  replicas: {{ .Values.num_pods.dl_data_api }}
+  selector:
+    matchLabels:
+      app: datalens-data-api
+  template:
+    metadata:
+      labels:
+        app: datalens-data-api
+    spec:
+      containers:
+        - name: datalens-data-api
+          image: {{ .Values.docker_images.dl_data_api }}
+          ports:
+            - containerPort: 80
+          env:
+            {{- include "crypto_keys" . | indent 12 }}
+            - name: GUNICORN_WORKERS_COUNT
+              value: {{ .Values.dl_data_api_settings.gunicorn_worker_num | quote }}
+            - name: RQE_FORCE_OFF
+              value: "1"
+            - name: CACHES_ON
+              value: "0"
+            - name: MUTATIONS_CACHES_ON
+              value: "0"
+            - name: BI_COMPENG_PG_ON
+              value: "1"
+            - name: BI_COMPENG_PG_URL
+              value: "postgresql://postgres:postgres@localhost:5432/postgres"
+            - name: US_HOST
+              value: "http://canada:8888"
+            - name: US_MASTER_TOKEN
+              value: "fake-us-master-token"  # TODO: read from k8s secrets
+            - name: CONFIG_PATH
+              value: "/etc/backend-configs/api.yaml"
+          readinessProbe:
+            httpGet:
+              port: 8080
+              scheme: HTTP
+              path: "/ping_ready"
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/backend-configs"
+              readOnly: true
+        - name: pg-compeng
+          image: postgres:13-alpine
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "postgres"
+            - name: POSTGRES_USER
+              value: "postgres"
+      volumes:
+        - name: config
+          configMap:
+            name: config-backend
+            items:
+              - key: config
+                path: "api.yaml"

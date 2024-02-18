@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canada
+  labels:
+    app: canada
+spec:
+  replicas: {{ .Values.num_pods.canada }}
+  selector:
+    matchLabels:
+      app: canada
+  template:
+    metadata:
+      labels:
+        app: canada
+    spec:
+      containers:
+        - name: canada
+          image: {{ .Values.docker_images.canada }}
+          ports:
+            - containerPort: 8888
+          env:
+            - name: YT_AUTH_MODE
+              value: {{ .Values.yt_settings.auth_mode }}
+            - name: YT_HOST
+              value: {{ .Values.yt_settings.host }}
+            - name: YT_HOST
+              value: {{ .Values.yt_settings.host }}
+            - name: ROOT_COLLECTION_NODE_ID
+              value: {{ .Values.yt_settings.root_collection_node_id }}
+          # uncomment when readiness handler is ready
+#          readinessProbe:
+#            httpGet:
+#              port: 8888
+#              scheme: HTTP
+#              path: "/ping"
+#            initialDelaySeconds: 5
+#            periodSeconds: 10
