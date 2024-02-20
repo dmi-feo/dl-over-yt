@@ -24,10 +24,12 @@ spec:
               value: {{ .Values.yt_settings.auth_mode }}
             - name: YT_HOST
               value: {{ .Values.yt_settings.host }}
-            - name: YT_HOST
-              value: {{ .Values.yt_settings.host }}
             - name: ROOT_COLLECTION_NODE_ID
               value: {{ .Values.yt_settings.root_collection_node_id }}
+          {{ if .Values.canada_settings.cert.use_custom_cert }}
+            - name: CA_FILE
+              value: "/etc/ssl/certs/ca-certificates.crt"
+          {{ end }}
           # uncomment when readiness handler is ready
 #          readinessProbe:
 #            httpGet:
@@ -36,3 +38,17 @@ spec:
 #              path: "/ping"
 #            initialDelaySeconds: 5
 #            periodSeconds: 10
+          {{ if .Values.canada_settings.cert.use_custom_cert }}
+          volumeMounts:
+            - mountPath: "/etc/ssl/certs"
+              name: cert
+          {{ end }}
+      {{ if .Values.canada_settings.cert.use_custom_cert }}
+      volumes:
+        - name: cert
+          configMap:
+            name: {{ .Values.canada_settings.cert.config_map_name }}
+            items:
+              - key: {{ .Values.canada_settings.cert.config_map_key }}
+                path: "ca-certificates.crt"
+      {{ end }}

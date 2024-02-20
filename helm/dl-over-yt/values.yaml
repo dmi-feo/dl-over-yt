@@ -24,6 +24,12 @@ dl_control_api_settings:
 dl_data_api_settings:
   gunicorn_worker_num: 4
 
+canada_settings:
+  cert:
+    use_custom_cert: false
+    config_map_name: null
+    config_map_key: null
+
 ingress:
   host: localhost
 
