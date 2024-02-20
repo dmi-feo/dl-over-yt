@@ -32,4 +32,7 @@ canada_settings:
 
 ingress:
   host: localhost
+  tls:
+    enabled: false
+    secret_name: null
 
