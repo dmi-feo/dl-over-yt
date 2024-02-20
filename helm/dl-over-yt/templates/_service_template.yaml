@@ -4,12 +4,10 @@ kind: Service
 metadata:
   name: {{ .service_name }}
 spec:
+  type: ClusterIP
   selector:
     app: {{ .app_selector }}
-  ipFamilyPolicy: PreferDualStack
-  ipFamilies:
-    - IPv6
-    - IPv4
   ports:
-    - port: {{ .port }}
+    - targetPort: {{ .port }}
+      port: 80
 {{ end }}

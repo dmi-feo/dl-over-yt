@@ -18,7 +18,7 @@ spec:
         - name: datalens-data-api
           image: {{ .Values.docker_images.dl_data_api }}
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           env:
             {{- include "crypto_keys" . | indent 12 }}
             - name: GUNICORN_WORKERS_COUNT
@@ -34,7 +34,7 @@ spec:
             - name: BI_COMPENG_PG_URL
               value: "postgresql://postgres:postgres@localhost:5432/postgres"
             - name: US_HOST
-              value: "http://canada:8888"
+              value: "http://canada"
             - name: US_MASTER_TOKEN
               value: "fake-us-master-token"  # TODO: read from k8s secrets
             - name: CONFIG_PATH

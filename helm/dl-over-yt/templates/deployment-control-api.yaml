@@ -18,7 +18,7 @@ spec:
         - name: datalens-control-api
           image: {{ .Values.docker_images.dl_control_api }}
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           env:
             {{- include "crypto_keys" . | indent 12 }}
             - name: BI_API_UWSGI_WORKERS_COUNT
@@ -26,7 +26,7 @@ spec:
             - name: RQE_FORCE_OFF
               value: "1"
             - name: US_HOST
-              value: "http://canada:8888"
+              value: "http://canada"
             - name: US_MASTER_TOKEN
               value: "fake-us-master-token"  # TODO: read from k8s secrets
             - name: CONFIG_PATH

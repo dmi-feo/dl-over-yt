@@ -18,7 +18,7 @@ spec:
         - name: datalens-ui
           image: {{ .Values.docker_images.dl_ui }}
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           env:
             - name: APP_MODE
               value: "full"
@@ -31,20 +31,20 @@ spec:
             - name: AUTH_POLICY
               value: "disabled"  # it seems it is not used anywhere
             - name: US_ENDPOINT
-              value: "http://canada:8888"
+              value: "http://canada"
             - name: BI_API_ENDPOINT
-              value: "http://control-api:8080"
+              value: "http://control-api"
             - name: BI_DATA_ENDPOINT
-              value: "http://data-api:8080"
+              value: "http://data-api"
             - name: NODE_EXTRA_CA_CERTS
               value: "/usr/local/share/ca-certificates/cert.pem"
             - name: HC
               value: {{ .Values.dl_ui_settings.use_highcharts | int | quote }}
           # uncomment when readiness handler is ready
-#          readinessProbe:
-#            httpGet:
-#              port: 8888
-#              scheme: HTTP
-#              path: "/ping"
-#            initialDelaySeconds: 5
-#            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              port: 8080
+              scheme: HTTP
+              path: "/ping"
+            initialDelaySeconds: 5
+            periodSeconds: 10

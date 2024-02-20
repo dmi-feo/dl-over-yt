@@ -2,7 +2,7 @@
 {{- $conf_service_canada := dict "service_name" "canada" "app_selector" "canada" "port" 8888 }}
 {{- include "service_template" $conf_service_canada }}
 ---
-{{- $conf_service_ui := dict "service_name" "datalens-ui" "app_selector" "datalens-ui" "port" 80 }}
+{{- $conf_service_ui := dict "service_name" "datalens-ui" "app_selector" "datalens-ui" "port" 8080 }}
 {{- include "service_template" $conf_service_ui }}
 ---
 {{- $conf_service_control_api := dict "service_name" "control-api" "app_selector" "datalens-control-api" "port" 8080 }}
