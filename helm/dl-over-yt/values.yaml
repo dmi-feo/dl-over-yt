@@ -32,6 +32,7 @@ canada_settings:
 
 ingress:
   host: localhost
+  nginx_ingress_class: nginx
   tls:
     enabled: false
     secret_name: null
