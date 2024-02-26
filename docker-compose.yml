@@ -55,7 +55,7 @@ services:
 
   datalens-ui:
     container_name: canada-demo-ui
-    image: ghcr.io/dmi-feo/dloveryt_ui:20240219-1
+    image: ghcr.io/dmi-feo/dloveryt_ui:20240226-2
 #    build:
 #      context: datalens-ui
     ports:
@@ -77,7 +77,7 @@ services:
 
   canada:
     container_name: canada
-    image: ghcr.io/dmi-feo/canada:20240218-1
+    image: ghcr.io/dmi-feo/canada:20240225-1
 #    build:
 #      context: canada
     ports:
