@@ -77,7 +77,7 @@ services:
 
   canada:
     container_name: canada
-    image: ghcr.io/dmi-feo/canada:20240225-1
+    image: ghcr.io/dmi-feo/canada:20240226-3
 #    build:
 #      context: canada
     ports:
