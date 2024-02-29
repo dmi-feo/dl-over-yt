@@ -40,6 +40,10 @@ spec:
               value: "/usr/local/share/ca-certificates/cert.pem"
             - name: HC
               value: {{ .Values.dl_ui_settings.use_highcharts | int | quote }}
+            - name: CHYT_DEFAULT_CONN_ID
+              value: {{ .Values.chyt_integration_settings.connection_id }}
+            - name: CHYT_TEMP_DATASET_WORKBOOK_ID
+              value: {{ .Values.chyt_integration_settings.temp_dataset_workbook_id }}
           # uncomment when readiness handler is ready
           readinessProbe:
             httpGet:
