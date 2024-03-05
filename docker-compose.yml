@@ -75,7 +75,7 @@ services:
 
   canada:
     container_name: canada
-    image: ghcr.io/dmi-feo/canada:20240226-3
+    image: ghcr.io/dmi-feo/canada:0.7.0
     ports:
       - 8888:8888
     environment:
