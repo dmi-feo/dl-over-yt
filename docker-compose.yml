@@ -56,8 +56,6 @@ services:
   datalens-ui:
     container_name: canada-demo-ui
     image: ghcr.io/dmi-feo/dloveryt_ui:20240226-2
-#    build:
-#      context: datalens-ui
     ports:
       - 8080:8080
     depends_on:
@@ -78,8 +76,6 @@ services:
   canada:
     container_name: canada
     image: ghcr.io/dmi-feo/canada:20240226-3
-#    build:
-#      context: canada
     ports:
       - 8888:8888
     environment:

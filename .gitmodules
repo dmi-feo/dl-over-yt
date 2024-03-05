@@ -1,6 +1,0 @@
-[submodule "datalens-ui"]
-	path = datalens-ui
-	url = https://github.com/dmi-feo/datalens-ui.git
-[submodule "canada"]
-	path = canada
-	url = https://github.com/dmi-feo/canada.git
