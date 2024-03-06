@@ -1,0 +1,9 @@
+repo_url: https://github.com/ytsaurus/ytsaurus-ui.git
+checkout: null
+patches:
+  - ./ytsaurus-ui-patches/001-docker-build-deploy.patch
+  - ./ytsaurus-ui-patches/002-share-secrets-on-subdomains.patch
+  - ./ytsaurus-ui-patches/003-datalens-button-iframe.patch
+
+docker_image: ghcr.io/dmi-feo/dloveryt_ui
+docker_context: packages/ui

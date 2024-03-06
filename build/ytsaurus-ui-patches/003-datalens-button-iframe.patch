@@ -1,0 +1,181 @@
+diff --git a/packages/ui/src/server/configs/common.ts b/packages/ui/src/server/configs/common.ts
+index ff18d88..def4cf0 100644
+--- a/packages/ui/src/server/configs/common.ts
++++ b/packages/ui/src/server/configs/common.ts
+@@ -56,6 +56,7 @@ const config: Partial<AppConfig> = {
+         reHashFromNodeVersion: '[^~]+~(?<hash>[^+]+)',
+         directDownload: true,
+         docsBaseUrl: process.env.YT_DOCS_BASE_URL || 'https://ytsaurus.tech/docs/en',
++        datalensBaseUrl: process.env.DATALENS_BASE_URL,
+     },
+ };
+ 
+diff --git a/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss b/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss
+index f481bfa..b773784 100644
+--- a/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss
++++ b/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss
+@@ -1,6 +1,7 @@
+ .data-table-wrapper {
+     margin-top: 20px;
+     position: relative;
++    overflow: scroll;
+ 
+     .data-table {
+         &__row {
+diff --git a/packages/ui/src/ui/pages/navigation/content/Table/Table.js b/packages/ui/src/ui/pages/navigation/content/Table/Table.js
+index 2f24404..8f6758d 100644
+--- a/packages/ui/src/ui/pages/navigation/content/Table/Table.js
++++ b/packages/ui/src/ui/pages/navigation/content/Table/Table.js
+@@ -49,6 +49,8 @@ import './Table.scss';
+ import TableColumnsPresetNotice from './TableOverview/TableColumnsPresetNotice';
+ import {makeTableRumId} from '../../../../store/actions/navigation/content/table/table-rum-id';
+ 
++import {uiSettings} from '../../../../config/ui-settings';
++
+ const block = cn('navigation-table');
+ 
+ Table.columnsProps = PropTypes.arrayOf(
+@@ -133,7 +135,7 @@ const renderTable = (props) => {
+     } else if (isFullScreen) {
+         stickyTop = 0;
+     } else {
+-        stickyTop = HEADER_HEIGHT + OVERVIEW_HEIGHT;
++          stickyTop = 0;
+     }
+ 
+     const tableSettings = {
+@@ -172,6 +174,13 @@ function Table(props) {
+     }, [path]);
+ 
+     const {isFullScreen, handleScreenChanged, isDynamic} = props;
++    const [showDatalens, toggleShowDatalens] = React.useState(false);
++
++    const yt_path = useSelector(getPath);
++    const {datalensBaseUrl} = uiSettings;
++
++    const dl_url = `${datalensBaseUrl}/workbooks/fake-chyt-wb-id/datasets/new?id=CHYT_DEFAULT_CONN_ID&ytPath=${yt_path}&action=autoCreate`;
++
+     return (
+         <div className={block()}>
+             <TableMeta />
+@@ -182,8 +191,21 @@ function Table(props) {
+                 onChange={handleScreenChanged}
+             >
+                 <StickyContainer>
+-                    <TableOverview />
+-                    {renderTable(props)}
++                    <TableOverview
++                        showDatalens={showDatalens}
++                        toggleShowDatalens={toggleShowDatalens}
++                    />
++
++                    {showDatalens ? (
++                        <iframe
++                            frameBorder="0"
++                            allowFullScreen
++                            className={block('iframe')}
++                            src={dl_url}
++                        ></iframe>
++                    ) : (
++                        renderTable(props)
++                    )}
+                 </StickyContainer>
+             </FullScreen>
+             {renderColumnSelectorModal(props)}
+diff --git a/packages/ui/src/ui/pages/navigation/content/Table/Table.scss b/packages/ui/src/ui/pages/navigation/content/Table/Table.scss
+index f06250b..1399476 100644
+--- a/packages/ui/src/ui/pages/navigation/content/Table/Table.scss
++++ b/packages/ui/src/ui/pages/navigation/content/Table/Table.scss
+@@ -24,4 +24,15 @@
+     &__fullscreen:fullscreen {
+         background-color: var(--main-background);
+     }
++
++    &__iframe {
++        display: block;
++        margin-right: 10px;
++        width: 100%;
++        height: 100vh;
++    }
++
++    &__iframe-container {
++        height: 100%;
++    }
+ }
+diff --git a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
+index 680bdcb..8830959 100644
+--- a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
++++ b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
+@@ -1,3 +1,5 @@
++// @ts-nocheck
++
+ import React from 'react';
+ import {useSelector} from 'react-redux';
+ 
+@@ -15,7 +17,15 @@ import {docsUrl} from '../../../../../config';
+ import {uiSettings} from '../../../../../config/ui-settings';
+ import UIFactory from '../../../../../UIFactory';
+ 
+-export default function DataLensButton({className}: {className: string}) {
++export default function DataLensButton({
++    className,
++    showDatalens,
++    toggleShowDatalens,
++}: {
++    className: string;
++    showDatalens: boolean;
++    toggleShowDatalens: Function;
++}) {
+     const loaded = useSelector(getNavigationPathAttributesLoadState) === LOADING_STATUS.LOADED;
+     const cluster: string = useSelector(getCluster);
+     const path = useSelector(getPath);
+@@ -23,18 +33,16 @@ export default function DataLensButton({className}: {className: string}) {
+         getNavigationTableDataLensButtonAlerts,
+     );
+ 
+-    const {datalensBaseUrl, datalensAllowedCluster} = uiSettings;
++    const {datalensBaseUrl} = uiSettings;
+ 
+-    if (!datalensBaseUrl || !new Set(datalensAllowedCluster).has(cluster)) {
++    if (!datalensBaseUrl) {
+         return null;
+     }
+     const showTooltip = isEmptySchema || enableDynamicStoreRedRequired;
+ 
+-    const url = `${datalensBaseUrl}/datasets/new?id=CHYT_${cluster.toUpperCase()}&ytPath=${path}&action=autoCreate`;
+-
+     const btn = (
+         <Button
+-            href={url}
++            onClick={() => toggleShowDatalens(!showDatalens)}
+             view={'action'}
+             target="_blank"
+             title="Create dataset in DataLens"
+diff --git a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js
+index 04d05cd..4fed68c 100644
+--- a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js
++++ b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js
+@@ -29,6 +29,8 @@ TableOverview.propTypes = {
+     isFullScreen: PropTypes.bool.isRequired,
+     isSplit: PropTypes.bool.isRequired,
+     allowQueryTracker: PropTypes.bool,
++    showDatalens: PropTypes.bool.isRequired,
++    toggleShowDatalens: PropTypes.func.isRequired,
+ };
+ 
+ function TableOverview(props) {
+@@ -59,7 +61,13 @@ function TableOverview(props) {
+                                 className: block('yql'),
+                             })}
+                         {!isFullScreen && <JupyterButton block={block} />}
+-                        {!isFullScreen && <DataLensButton className={block('datalens')} />}
++                        {!isFullScreen && (
++                            <DataLensButton
++                                showDatalens={props.showDatalens}
++                                toggleShowDatalens={props.toggleShowDatalens}
++                                className={block('datalens')}
++                            />
++                        )}
+                         {!isFullScreen && <TableActions block={block} />}
+                         <FullScreenButton block={block} />
+                         {!isFullScreen && <EditTableActions />}
