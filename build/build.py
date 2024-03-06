@@ -13,6 +13,10 @@ import yaml
 REPO_DIR = "repo"
 
 
+def run_command(command_args: list[str]):
+    subprocess.run(command_args, check=True)
+
+
 def main(config_path: str, docker_tag: str | None = None, push_docker: bool = False):
     with open(config_path) as config_file:
         config = yaml.safe_load(config_file)
@@ -25,22 +29,22 @@ def main(config_path: str, docker_tag: str | None = None, push_docker: bool = Fa
     with tempfile.TemporaryDirectory() as build_dir:
         print("Working directory:", build_dir)
         os.chdir(build_dir)
-        subprocess.run(["git", "clone", config["repo_url"], REPO_DIR])
+        run_command(["git", "clone", config["repo_url"], REPO_DIR])
 
         os.chdir(REPO_DIR)
 
         if config["checkout"] is not None:
-            subprocess.run(["git", "checkout", config["checkout"]])
+            run_command(["git", "checkout", config["checkout"]])
 
         for patch_file in patches:
             print("Going to apply patch", patch_file)
-            subprocess.run(["git", "apply", patch_file])
+            run_command(["git", "apply", patch_file])
             print("Patch applied successfully:", patch_file)
 
         os.chdir(config["docker_context"])
-        subprocess.run(["docker", "build", ".", "-t", full_docker_tag])
+        run_command(["docker", "build", ".", "-t", full_docker_tag])
         if push_docker:
-            subprocess.run(["docker", "push", full_docker_tag])
+            run_command(["docker", "push", full_docker_tag])
 
 
 if __name__ == "__main__":
