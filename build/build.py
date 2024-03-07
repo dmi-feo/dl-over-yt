@@ -46,7 +46,7 @@ def main(config_path: str, docker_tag: str | None = None, push_docker: bool = Fa
             print("Patch applied successfully:", patch_file)
 
         os.chdir(config["docker_context"])
-        run_command(["docker", "build", ".", "-t", full_docker_tag])
+        run_command(["docker", "build", ".", "-t", full_docker_tag, "--platform", "linux/amd64"])
         if push_docker:
             run_command(["docker", "push", full_docker_tag])
 

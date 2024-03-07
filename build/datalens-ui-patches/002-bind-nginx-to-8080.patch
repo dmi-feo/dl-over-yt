@@ -1,0 +1,13 @@
+diff --git a/deploy/nginx/sites-enabled/app.conf b/deploy/nginx/sites-enabled/app.conf
+--- a/deploy/nginx/sites-enabled/app.conf
++++ b/deploy/nginx/sites-enabled/app.conf
+@@ -1,6 +1,6 @@
+ server {
+-    listen 80 default_server;
+-    listen [::]:80 default_server;
++    listen 8080 default_server;
++    listen [::]:8080 default_server;
+
+     include include/opensource/cors.conf;
+     proxy_hide_header Access-Control-Allow-Origin;
+

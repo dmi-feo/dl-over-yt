@@ -1,0 +1,146 @@
+diff --git b/src/@types/nodekit.d.ts a/src/@types/nodekit.d.ts
+--- b/src/@types/nodekit.d.ts
++++ a/src/@types/nodekit.d.ts
+@@ -10,6 +10,9 @@ export interface SharedAppConfig {
+
+     usMasterToken?: string;
+
++    chytDefaultConnectionId: string;
++    chytTempDatasetWorkbookId: string;
++
+     regionalEnvConfig?: {allowLanguages?: string[]; defaultLang?: string; langRegion?: string};
+
+     chartsMonitoringEnabled?: boolean;
+
+diff --git b/src/server/components/layout/opensource-layout-config.ts a/src/server/components/layout/opensource-layout-config.ts
+--- b/src/server/components/layout/opensource-layout-config.ts
++++ a/src/server/components/layout/opensource-layout-config.ts
+@@ -44,6 +44,9 @@ export const getOpensourceLayoutConfig: GetLayoutConfig = async (args) => {
+         lang = Language.En;
+     }
+
++    const chytConnectionId = config.chytDefaultConnectionId;
++    const chytTempDatasetWorkbookId = config.chytTempDatasetWorkbookId;
++
+     // TODO: check and remove optional props;
+     const user: DLUser = {lang} as DLUser;
+     const userSettings = {};
+@@ -66,6 +69,8 @@ export const getOpensourceLayoutConfig: GetLayoutConfig = async (args) => {
+         chartkitSettings: config.chartkitSettings,
+         allowLanguages,
+         headersMap: req.ctx.config.headersMap,
++        chytConnectionId,
++        chytTempDatasetWorkbookId,
+         ...appLayoutSettings.DL,
+     };
+     const renderConfig: RenderParams<{DL: DLGlobalData}> = {
+
+diff --git b/src/server/configs/opensource/common.ts a/src/server/configs/opensource/common.ts
+--- b/src/server/configs/opensource/common.ts
++++ a/src/server/configs/opensource/common.ts
+@@ -47,6 +47,9 @@ export default {
+     },
+     usMasterToken: process.env.US_MASTER_TOKEN || 'fake-us-master-token',
+
++    chytDefaultConnectionId: process.env.CHYT_DEFAULT_CONN_ID || 'fake-chyt-conn-id',
++    chytTempDatasetWorkbookId: process.env.CHYT_TEMP_DATASET_WORKBOOK_ID || 'fake-chyt-workbook-id',
++
+     // CHARTS MODE
+
+     allowBodyConfig: false,
+
+diff --git b/src/shared/types/common.ts a/src/shared/types/common.ts
+--- b/src/shared/types/common.ts
++++ a/src/shared/types/common.ts
+@@ -201,6 +201,8 @@ export type DLGlobalData = {
+     chartkitSettings?: ChartkitGlobalSettings;
+     extraPalettes?: Record<string, Palette>;
+     headersMap?: Record<string, string>;
++    chytConnectionId: string;
++    chytTempDatasetWorkbookId: string;
+ } & MainLayoutConfigData;
+
+ export type ContactDialogSettings = {
+
+diff --git b/src/ui/constants/common.ts a/src/ui/constants/common.ts
+--- b/src/ui/constants/common.ts
++++ a/src/ui/constants/common.ts
+@@ -71,6 +71,12 @@ export const KeyCodes = {
+ // and a DL structure with default values must be guaranteed to access, for example, DL.UserSettings.theme,
+ // and not DL.USER_THEME (nevertheless, with frequent access, such a thing may be justified)
+ export const DL = {
++    get CHYT_CONNECTION_ID() {
++        return window.DL.chytConnectionId;
++    },
++    get CHYT_TEMP_DATASET_WORKBOOK_ID() {
++        return window.DL.chytTempDatasetWorkbookId;
++    },
+     get SERVICE_NAME() {
+         return window.DL.serviceName;
+     },
+
+diff --git b/src/ui/units/datasets/constants/datasets.ts a/src/ui/units/datasets/constants/datasets.ts
+--- b/src/ui/units/datasets/constants/datasets.ts
++++ a/src/ui/units/datasets/constants/datasets.ts
+@@ -23,6 +23,7 @@ export const mapYTClusterToConnId: Record<string, string> = {
+     CHYT_ARNOLD: preprodEnv ? '5hs5qbuagvc2z' : '6in99m5b0dok0',
+     CHYT_HAHN: preprodEnv ? '8kv9dgp8bqbs2' : '1di43d901khiv',
+     CHYT_VANGA: preprodEnv ? 'eq1f0qaiwkaw8' : 'w8dy1hcbwrrcq',
++    CHYT_DEFAULT_CONN_ID: DL.CHYT_CONNECTION_ID,
+ };
+
+ export const MANAGED_BY = {
+
+diff --git b/src/ui/units/datasets/containers/Dataset/Dataset.js a/src/ui/units/datasets/containers/Dataset/Dataset.js
+--- b/src/ui/units/datasets/containers/Dataset/Dataset.js
++++ a/src/ui/units/datasets/containers/Dataset/Dataset.js
+@@ -12,6 +12,7 @@ import SplitPane from 'react-split-pane';
+ import {compose} from 'recompose';
+ import {createStructuredSelector} from 'reselect';
+ import {DatasetActionQA, ErrorContentTypes} from 'shared';
++import {DL} from 'ui';
+ import {
+     addAvatar,
+     addSource,
+@@ -50,7 +51,6 @@ import DialogCreateDataset from '../../components/DialogCreateDataset/DialogCrea
+ import {TAB_DATASET, TAB_SOURCES, VIEW_PREVIEW, getFakeEntry} from '../../constants';
+ import DatasetError from '../../containers/DatasetError/DatasetError';
+ import DatasetTabViewer from '../../containers/DatasetTabViewer/DatasetTabViewer';
+-import {getAutoCreatedYTDatasetKey} from '../../helpers/datasets';
+ import DatasetUtils from '../../helpers/utils';
+ import {
+     UISelector,
+@@ -215,7 +215,7 @@ class Dataset extends React.Component {
+             this.props.saveDataset({
+                 isAuto,
+                 isCreationProcess,
+-                key: getAutoCreatedYTDatasetKey(ytPath),
++                workbookId: DL.CHYT_TEMP_DATASET_WORKBOOK_ID,
+                 history,
+             });
+         }
+@@ -380,7 +380,11 @@ class Dataset extends React.Component {
+     };
+
+     getWorkbookId() {
+-        return this.props.match.params.workbookId || this.props.workbookId;
++        const wbId = this.props.match.params.workbookId || this.props.workbookId;
++        if (wbId === 'fake-chyt-wb-id') {
++            return DL.CHYT_TEMP_DATASET_WORKBOOK_ID;
++        }
++        return wbId;
+     }
+
+     refreshSources = () => {
+
+diff --git b/src/ui/units/datasets/store/actions/creators/dataset.js a/src/ui/units/datasets/store/actions/creators/dataset.js
+--- b/src/ui/units/datasets/store/actions/creators/dataset.js
++++ a/src/ui/units/datasets/store/actions/creators/dataset.js
+@@ -406,7 +406,6 @@ export function saveDataset({key, workbookId, name, history, isCreationProcess,
+                 const creationData = {
+                     dataset,
+                     multisource: true,
+-                    ...(isAuto && {created_via: 'yt_to_dl'}),
+                 };
+
+                 if (workbookId) {

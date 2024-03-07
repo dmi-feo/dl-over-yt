@@ -1,0 +1,247 @@
+diff --git b/src/server/components/charts-engine/components/storage/united-storage/provider.ts a/src/server/components/charts-engine/components/storage/united-storage/provider.ts
+--- b/src/server/components/charts-engine/components/storage/united-storage/provider.ts
++++ a/src/server/components/charts-engine/components/storage/united-storage/provider.ts
+@@ -19,6 +19,7 @@ import {
+     US_PUBLIC_API_TOKEN_HEADER,
+     WORKBOOK_ID_HEADER,
+     WorkbookId,
++    CSRF_TOKEN_HEADER,
+ } from '../../../../../../shared';
+ import {createErrorHandler} from '../../error-handler';
+ import {getDuration} from '../../utils';
+@@ -138,6 +139,8 @@ const PASSED_HEADERS = [
+     DL_EMBED_TOKEN_HEADER,
+
+     DL_COMPONENT_HEADER,
++
++    CSRF_TOKEN_HEADER,
+ ];
+
+ const DEFAULT_MAX_BODY_LENGTH = 15 * 1024 * 1024; // 100 MB
+
+diff --git b/src/server/components/charts-engine/components/utils.ts a/src/server/components/charts-engine/components/utils.ts
+--- b/src/server/components/charts-engine/components/utils.ts
++++ a/src/server/components/charts-engine/components/utils.ts
+@@ -148,6 +148,14 @@ export function hideSensitiveData<T extends Test>(data: T = '' as T): T {
+     return data;
+ }
+
+-export function getSourceAuthorizationHeaders() {
+-    return {};
+-}
++ // eslint-disable-next-line complexity
++ export function getSourceAuthorizationHeaders({
++     subrequestHeaders,
++ }: {
++     subrequestHeaders: Record<string, string>;
++ }): Record<string, string> {
++     const authHeaders: Record<string, string> = {};
++
++     authHeaders.cookie = subrequestHeaders.cookie;
++     return authHeaders;
++ }
+
+diff --git b/src/server/configs/opensource/common.ts a/src/server/configs/opensource/common.ts
+--- b/src/server/configs/opensource/common.ts
++++ a/src/server/configs/opensource/common.ts
+@@ -63,7 +63,9 @@ export default {
+         return {
+             bi: {
+                 dataEndpoint: sources.bi,
+-                passedCredentials: {},
++                passedCredentials: {
++                    dloveryt: true  // content of these maps is never used
++                },
+                 description: {
+                     title: {
+                         ru: 'DataLens BI',
+@@ -73,7 +75,9 @@ export default {
+             },
+             bi_connections: {
+                 dataEndpoint: sources.bi_connections,
+-                passedCredentials: {},
++                passedCredentials: {
++                    dloveryt: true
++                },
+                 description: {
+                     title: {
+                         ru: 'DataLens BI Connections',
+@@ -83,7 +87,9 @@ export default {
+             },
+             bi_datasets: {
+                 dataEndpoint: sources.bi_datasets,
+-                passedCredentials: {},
++                passedCredentials: {
++                    dloveryt: true
++                },
+                 description: {
+                     title: {
+                         ru: 'DataLens BI Datasets',
+@@ -93,7 +99,9 @@ export default {
+             },
+             bi_datasets_embed: {
+                 dataEndpoint: sources.bi_datasets_embed,
+-                passedCredentials: {},
++                passedCredentials: {
++                    dloveryt: true
++                },
+                 description: {
+                     title: {
+                         ru: 'DataLens BI Datasets Embed',
+@@ -103,7 +111,9 @@ export default {
+             },
+             bi_connections_embed: {
+                 dataEndpoint: sources.bi_connections_embed,
+-                passedCredentials: {},
++                passedCredentials: {
++                    dloveryt: true
++                },
+                 description: {
+                     title: {
+                         ru: 'DataLens BI Connections Embed',
+
+diff --git b/src/server/modes/opensource/app.ts a/src/server/modes/opensource/app.ts
+--- b/src/server/modes/opensource/app.ts
++++ a/src/server/modes/opensource/app.ts
+@@ -15,6 +15,7 @@ import {
+     xDlContext,
+ } from '../../middlewares';
+ import {registry} from '../../registry';
++import {getSourceAuthorizationHeaders} from '../../components/charts-engine/components/utils';
+ import {initChartsEngine} from '../charts/init-charts-engine';
+ import {configuredDashApiPlugin} from '../charts/plugins/dash-api';
+ import {plugin as ql} from '../charts/plugins/ql';
+@@ -27,6 +28,10 @@ export default function initApp(nodekit: NodeKit) {
+     const beforeAuth: AppMiddleware[] = [];
+     const afterAuth: AppMiddleware[] = [];
+
++    registry.common.functions.register({
++        getSourceAuthorizationHeaders,
++    });
++
+     registry.setupXlsxConverter(xlsxConverter);
+
+     if (isFullMode || isDatalensMode) {
+
+diff --git b/src/server/modes/opensource/middlewares/subrequest-headers.ts a/src/server/modes/opensource/middlewares/subrequest-headers.ts
+--- b/src/server/modes/opensource/middlewares/subrequest-headers.ts
++++ a/src/server/modes/opensource/middlewares/subrequest-headers.ts
+@@ -1,6 +1,6 @@
+ import {NextFunction, Request, Response} from '@gravity-ui/expresskit';
+
+-import {DL_COMPONENT_HEADER, DL_CONTEXT_HEADER, TENANT_ID_HEADER} from '../../../../shared';
++import {DL_COMPONENT_HEADER, DL_CONTEXT_HEADER, TENANT_ID_HEADER, CSRF_TOKEN_HEADER} from '../../../../shared';
+
+ type SubrequestHeaders = Record<string, unknown>;
+ type AuthFlags = Record<string, boolean>;
+@@ -48,6 +48,7 @@ export function setSubrequestHeaders(req: Request, res: Response, next: NextFunc
+
+     subrequestHeaders[DL_CONTEXT_HEADER] = req.headers[DL_CONTEXT_HEADER];
+     subrequestHeaders[DL_COMPONENT_HEADER] = req.headers[DL_COMPONENT_HEADER];
++    subrequestHeaders[CSRF_TOKEN_HEADER] = req.headers[CSRF_TOKEN_HEADER]
+
+     res.locals.subrequestHeaders = subrequestHeaders;
+     res.locals.authFlags = authFlags;
+
+diff --git b/src/server/utils/gateway.ts a/src/server/utils/gateway.ts
+--- b/src/server/utils/gateway.ts
++++ a/src/server/utils/gateway.ts
+@@ -5,7 +5,7 @@ import {Headers as DebugHeaders, GatewayConfig, GatewayError} from '@gravity-ui/
+ import {AppContext, AppError, NodeKit} from '@gravity-ui/nodekit';
+
+ import {Feature, isEnabledServerFeature} from '../../shared';
+-import {getAuthHeadersNone} from '../../shared/schema/gateway-utils';
++import {getAuthHeadersCookie} from '../../shared/schema/gateway-utils';
+ import {IPV6_AXIOS_OPTIONS} from '../constants/axios';
+
+ export type GatewayApiErrorResponse<T = GatewayError> = {
+@@ -81,7 +81,7 @@ export const getGatewayConfig = (
+         axiosConfig,
+         withDebugHeaders: false,
+         getAuthArgs: () => undefined,
+-        getAuthHeaders: getAuthHeadersNone,
++        getAuthHeaders: getAuthHeadersCookie,
+         ErrorConstructor: AppError,
+         ...(config || {}),
+     };
+
+diff --git b/src/server/utils/index.ts a/src/server/utils/index.ts
+--- b/src/server/utils/index.ts
++++ a/src/server/utils/index.ts
+@@ -14,8 +14,8 @@ import {
+     REQUEST_ID_HEADER,
+     SuperuserHeader,
+     TENANT_ID_HEADER,
++    CSRF_TOKEN_HEADER,
+ } from '../../shared';
+-import {isOpensourceInstallation} from '../app-env';
+
+ class Utils {
+     static getName(key = '') {
+@@ -33,12 +33,9 @@ class Utils {
+             TENANT_ID_HEADER,
+             PROJECT_ID_HEADER,
+             subjectTokenHeader,
++            CSRF_TOKEN_HEADER,
+         ];
+
+-        if (isOpensourceInstallation) {
+-            headersList = [];
+-        }
+-
+         return pick(headers, headersList);
+     }
+
+diff --git b/src/server/middlewares/before-auth-defaults.ts a/src/server/middlewares/before-auth-defaults.ts
+--- b/src/server/middlewares/before-auth-defaults.ts
++++ a/src/server/middlewares/before-auth-defaults.ts
+@@ -28,5 +28,7 @@ export default async function (req: Request, res: Response, next: NextFunction)
+
+     req.originalContext.set('i18n', i18n);
+
++    req.headers['x-csrf-token'] = req.cookies['CSRF-TOKEN'];
++
+     next();
+ }
+
+diff --git b/src/ui/utils/utils.ts a/src/ui/utils/utils.ts
+--- b/src/ui/utils/utils.ts
++++ a/src/ui/utils/utils.ts
+@@ -213,8 +213,7 @@ export default class Utils {
+     }
+
+     static getCSRFToken() {
+-        const csrfMetaTag: HTMLMetaElement | null = document.querySelector('meta[name=csrf-token]');
+-        return csrfMetaTag ? csrfMetaTag.content : null;
++        return Utils.getCookie('CSRF-TOKEN');
+     }
+
+     static isEnabledFeature(featureName: string) {
+
+diff --git b/src/shared/schema/gateway-utils.ts a/src/shared/schema/gateway-utils.ts
+--- b/src/shared/schema/gateway-utils.ts
++++ a/src/shared/schema/gateway-utils.ts
+@@ -1,9 +1,22 @@
+ import {Request, Response} from '@gravity-ui/expresskit';
+ import {ApiServiceActionConfig} from '@gravity-ui/gateway';
+ import {AppContext} from '@gravity-ui/nodekit';
++import {GetAuthHeadersParams} from '@gravity-ui/gateway';
+
+ export const getAuthHeadersNone = () => undefined;
+
++type GetAuthHeaders<AuthArgs = Record<string, unknown>> = (
++    params: GetAuthHeadersParams<AuthArgs>,
++) => Record<string, string> | undefined;
++
++type AuthArgsData = {};
++
++export const getAuthHeadersCookie: GetAuthHeaders<AuthArgsData> = ({requestHeaders}) => {
++    return {
++        cookie: requestHeaders.cookie,
++    };
++};
++
+ export function createAction<TOutput, TParams = undefined, TTransformed = TOutput>(
+     config: ApiServiceActionConfig<AppContext, Request, Response, TOutput, TParams, TTransformed>,
+ ) {
+ 

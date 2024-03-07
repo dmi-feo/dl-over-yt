@@ -1,0 +1,41 @@
+diff --git a/src/shared/modules/helpers.ts b/src/shared/modules/helpers.ts
+--- a/src/shared/modules/helpers.ts
++++ b/src/shared/modules/helpers.ts
+@@ -1,7 +1,5 @@
+ import {
+-    ENTRY_ID_LENGTH,
+     ENTRY_ROUTES,
+-    ENTRY_SLUG_SEPARATOR,
+     NavigatorModes,
+     VISUALIZATIONS_WITH_NAVIGATOR,
+     WIZARD_ROUTE,
+@@ -30,15 +28,12 @@ import {
+ import {isMeasureName} from './wizard-helpers';
+
+ function getEntryId(str: string): string | null {
+-    const possibleEntryId = str.slice(0, ENTRY_ID_LENGTH);
+-    const isEntryIdResult = isEntryId(possibleEntryId);
+-    if (isEntryIdResult && str.length === ENTRY_ID_LENGTH) {
+-        return possibleEntryId;
+-    }
+-    if (isEntryIdResult && str[ENTRY_ID_LENGTH] === ENTRY_SLUG_SEPARATOR) {
+-        return possibleEntryId;
++    const match = str.match(/^[a-z0-9]{1,8}-[a-z0-9]{1,8}-[a-z0-9]{1,8}-[a-z0-9]{1,8}/);
++    if (match !== null) {
++        return match[0];
++    } else {
++        return null;
+     }
+-    return null;
+ }
+
+ export function extractEntryId(input?: string): string | null {
+@@ -255,7 +250,7 @@ export function getObjectValueByPossibleKeys<T>(possibleKeys: string[], obj: Rec
+ }
+
+ export const isEntryId = (value: string) => {
+-    const ENTRY_ID_FORMAT = /^[0-9a-z]{13}$/;
++    const ENTRY_ID_FORMAT = /^[a-z0-9]{1,8}-[a-z0-9]{1,8}-[a-z0-9]{1,8}-[a-z0-9]{1,8}$/;
+     return ENTRY_ID_FORMAT.test(value);
+ };
+

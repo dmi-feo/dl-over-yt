@@ -1,0 +1,10 @@
+repo_url: https://github.com/datalens-tech/datalens-ui.git
+checkout: v0.1407.0
+patches:
+  - ./datalens-ui-patches/001-yt-id-as-entry-id.patch
+  - ./datalens-ui-patches/002-bind-nginx-to-8080.patch
+  - ./datalens-ui-patches/003-yt-auth.patch
+  - ./datalens-ui-patches/004-yt-dl-button.patch
+
+docker_image: ghcr.io/dmi-feo/dloveryt/datalens-ui
+docker_context: .
