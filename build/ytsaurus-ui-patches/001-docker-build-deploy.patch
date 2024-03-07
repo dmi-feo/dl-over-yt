@@ -1,5 +1,4 @@
 diff --git a/packages/ui/Dockerfile b/packages/ui/Dockerfile
-index 43e0d2c..3cc33c3 100644
 --- a/packages/ui/Dockerfile
 +++ b/packages/ui/Dockerfile
 @@ -7,15 +7,16 @@ COPY deploy ./deploy
@@ -25,7 +24,6 @@ index 43e0d2c..3cc33c3 100644
  EXPOSE 80
  
 diff --git a/packages/ui/deploy/scripts/preflight.sh b/packages/ui/deploy/scripts/preflight.sh
-index b3e7c1f..ebc0a76 100644
 --- a/packages/ui/deploy/scripts/preflight.sh
 +++ b/packages/ui/deploy/scripts/preflight.sh
 @@ -7,7 +7,6 @@ sed -e "s/%APP_HTTP_PORT%/${APP_HTTP_PORT:-80}/" -i /etc/nginx/sites-enabled/*.c

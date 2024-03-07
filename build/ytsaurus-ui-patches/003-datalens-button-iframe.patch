@@ -1,5 +1,4 @@
 diff --git a/packages/ui/src/server/configs/common.ts b/packages/ui/src/server/configs/common.ts
-index ff18d88..def4cf0 100644
 --- a/packages/ui/src/server/configs/common.ts
 +++ b/packages/ui/src/server/configs/common.ts
 @@ -56,6 +56,7 @@ const config: Partial<AppConfig> = {
@@ -11,7 +10,6 @@ index ff18d88..def4cf0 100644
  };
  
 diff --git a/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss b/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss
-index f481bfa..b773784 100644
 --- a/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss
 +++ b/packages/ui/src/ui/pages/navigation/content/Table/DataTableWrapper/DataTableWrapper.scss
 @@ -1,6 +1,7 @@
@@ -23,7 +21,6 @@ index f481bfa..b773784 100644
      .data-table {
          &__row {
 diff --git a/packages/ui/src/ui/pages/navigation/content/Table/Table.js b/packages/ui/src/ui/pages/navigation/content/Table/Table.js
-index 2f24404..8f6758d 100644
 --- a/packages/ui/src/ui/pages/navigation/content/Table/Table.js
 +++ b/packages/ui/src/ui/pages/navigation/content/Table/Table.js
 @@ -49,6 +49,8 @@ import './Table.scss';
@@ -83,7 +80,6 @@ index 2f24404..8f6758d 100644
              </FullScreen>
              {renderColumnSelectorModal(props)}
 diff --git a/packages/ui/src/ui/pages/navigation/content/Table/Table.scss b/packages/ui/src/ui/pages/navigation/content/Table/Table.scss
-index f06250b..1399476 100644
 --- a/packages/ui/src/ui/pages/navigation/content/Table/Table.scss
 +++ b/packages/ui/src/ui/pages/navigation/content/Table/Table.scss
 @@ -24,4 +24,15 @@
@@ -103,7 +99,6 @@ index f06250b..1399476 100644
 +    }
  }
 diff --git a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
-index 680bdcb..8830959 100644
 --- a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
 +++ b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
 @@ -1,3 +1,5 @@
@@ -152,7 +147,6 @@ index 680bdcb..8830959 100644
              target="_blank"
              title="Create dataset in DataLens"
 diff --git a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js
-index 04d05cd..4fed68c 100644
 --- a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js
 +++ b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/TableOverview.js
 @@ -29,6 +29,8 @@ TableOverview.propTypes = {
