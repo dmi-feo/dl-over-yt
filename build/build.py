@@ -23,7 +23,11 @@ def main(config_path: str, docker_tag: str | None = None, push_docker: bool = Fa
 
     patches = list(map(os.path.abspath, config["patches"]))
 
-    docker_tag = docker_tag or datetime.datetime.now().strftime("%Y-%m-%d") + "-" + str(uuid.uuid4())
+    docker_tag = (
+            docker_tag or
+            config["checkout"] or
+            datetime.datetime.now().strftime("%Y-%m-%d") + "-" + str(uuid.uuid4())
+    )
     full_docker_tag = f"{config["docker_image"]}:{docker_tag}"
 
     with tempfile.TemporaryDirectory() as build_dir:
@@ -38,7 +42,7 @@ def main(config_path: str, docker_tag: str | None = None, push_docker: bool = Fa
 
         for patch_file in patches:
             print("Going to apply patch", patch_file)
-            run_command(["git", "apply", patch_file])
+            run_command(["git", "apply", "--reject", "--whitespace=fix", patch_file])
             print("Patch applied successfully:", patch_file)
 
         os.chdir(config["docker_context"])

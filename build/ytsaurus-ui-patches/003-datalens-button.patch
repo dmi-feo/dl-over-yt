@@ -1,0 +1,49 @@
+diff --git a/packages/ui/src/server/configs/common.ts b/packages/ui/src/server/configs/common.ts
+index ff18d88..def4cf0 100644
+--- a/packages/ui/src/server/configs/common.ts
++++ b/packages/ui/src/server/configs/common.ts
+@@ -56,6 +56,7 @@ const config: Partial<AppConfig> = {
+         reHashFromNodeVersion: '[^~]+~(?<hash>[^+]+)',
+         directDownload: true,
+         docsBaseUrl: process.env.YT_DOCS_BASE_URL || 'https://ytsaurus.tech/docs/en',
++        datalensBaseUrl: process.env.DATALENS_BASE_URL,
+     },
+ };
+
+
+diff --git a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
+index 680bdcb..ada73e8 100644
+--- a/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
++++ b/packages/ui/src/ui/pages/navigation/content/Table/TableOverview/DatalensButton.tsx
+@@ -2,7 +2,6 @@ import React from 'react';
+ import {useSelector} from 'react-redux';
+
+ import {getPath} from '../../../../../store/selectors/navigation';
+-import {getCluster} from '../../../../../store/selectors/global';
+ import Icon from '../../../../../components/Icon/Icon';
+ import {Tooltip} from '../../../../../components/Tooltip/Tooltip';
+ import {getNavigationTableDataLensButtonAlerts} from '../../../../../store/selectors/navigation/content/table-ts';
+@@ -17,20 +16,19 @@ import UIFactory from '../../../../../UIFactory';
+
+ export default function DataLensButton({className}: {className: string}) {
+     const loaded = useSelector(getNavigationPathAttributesLoadState) === LOADING_STATUS.LOADED;
+-    const cluster: string = useSelector(getCluster);
+     const path = useSelector(getPath);
+     const {isEmptySchema, enableDynamicStoreRedRequired} = useSelector(
+         getNavigationTableDataLensButtonAlerts,
+     );
+
+-    const {datalensBaseUrl, datalensAllowedCluster} = uiSettings;
++    const {datalensBaseUrl} = uiSettings;
+
+-    if (!datalensBaseUrl || !new Set(datalensAllowedCluster).has(cluster)) {
++    if (!datalensBaseUrl) {
+         return null;
+     }
+     const showTooltip = isEmptySchema || enableDynamicStoreRedRequired;
+
+-    const url = `${datalensBaseUrl}/datasets/new?id=CHYT_${cluster.toUpperCase()}&ytPath=${path}&action=autoCreate`;
++    const url = `${datalensBaseUrl}/workbooks/fake-chyt-wb-id/datasets/new?id=CHYT_DEFAULT_CONN_ID&ytPath=${path}&action=autoCreate`;
+
+     const btn = (
+         <Button
